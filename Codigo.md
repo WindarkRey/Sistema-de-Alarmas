@@ -84,7 +84,6 @@ void menuPrincipal (){
       case '3':
       	//mPrincipal = false;
         //lcd.clear();
-      	//mAlarma3 = true;
       break;
     } 
   }  
@@ -137,9 +136,10 @@ void mPIN(){
   char pinActual[4] = "";
   char actual[4]="";
   pinActual[0] = EEPROM.read(0);
-  pinActual[0] = EEPROM.read(1);
-  pinActual[0] = EEPROM.read(2);
-  pinActual[0] = EEPROM.read(3);
+  pinActual[1] = EEPROM.read(1);
+  pinActual[2] = EEPROM.read(2);
+  pinActual[3] = EEPROM.read(3);
+  
 
   char tecla = kp.getKey();
   if( i < 4){
@@ -168,6 +168,8 @@ void mPIN(){
         if(tecla >= '0' && tecla <='9'){
           lcd.print("*");
           actual[i] = tecla;
+      		Serial.println(pinActual);
+          
           i++;
         }
         break;
@@ -180,14 +182,15 @@ void mPIN(){
       lcd.clear();
       lcd.setCursor(0,0);
       lcd.print("Pin Correcto.");
+      Serial.println(pinActual);
+      //Serial.println(actual);
       delay(100);
       lcd.clear();
       lcd.setCursor(0,0);
       lcd.print("Ingrese nuevo PIN:");
       lcd.setCursor(0,1);
-
+      
       menuPIN = false;
-      lcd.clear();
       mNuevoPIN =true;
 
       lcd.clear();
@@ -195,14 +198,22 @@ void mPIN(){
 
     }else{
       pinIgual = false;
+      Serial.println(pinActual);
+      Serial.println(actual);
     }
     if(!pinIgual){
       lcd.clear();
       lcd.setCursor(0,0);
       lcd.print("Pin Incorrecto.");
-      strcpy( actual, "" );
+      
+      strcpy( actual, "");
       i = 0;
       delay(100);
+      lcd.clear();
+      lcd.setCursor(0,0);
+      lcd.print("Ingrese PIN:");
+      lcd.setCursor(0,1);
+      
     }
   }
 }
@@ -381,14 +392,18 @@ void setup() {
   lcd.backlight();
   //lcd.blink();
   
+  pinMode (pingPin, OUTPUT);
+  pinMode (pingPin2, OUTPUT);
+  pinMode (pingPin3, OUTPUT);
+  
   pinMode (led1, OUTPUT);
   pinMode (led2, OUTPUT);
   pinMode (led3, OUTPUT);
   analogWrite (led1, 128);
   analogWrite (led2, 128);
   analogWrite (led3, 128);
-  
   pinMode (alarma, OUTPUT);
+  
 
 }
 // --- LOOP ---
@@ -418,7 +433,6 @@ void loop() {
   }else if(mIngresarEstadoAlarma){
     ingresarEstadoAlarma();
   }
-  sensoresActivados();
 }
 // --- Sensores ---
 void Sensor(){
@@ -457,18 +471,19 @@ void activar(){
   lcd.print("Activar Alarma?");
   lcd.setCursor(0,1);
   lcd.print("1. Si / 2. No");
-   
   char tecla = kp.getKey();
   if (tecla != NO_KEY){
     switch (tecla) {
       case '1':
       	sensorActivado = true;
+      	sensoresActivados();
         mAlarma = false;
         lcd.clear();
       	mConfig = true;
       break;
       case '2':
       	sensorActivado = false;
+      	sensoresActivados();
         mAlarma = false;
         lcd.clear();
       	mConfig = true;
@@ -485,7 +500,6 @@ void activar(){
       break;
     }
   }
-  sensoresActivados();
 }
 void activar2() {
   lcd.setCursor(0,0);
@@ -497,12 +511,14 @@ void activar2() {
     switch (tecla) {
       case '1':
       	sensorActivado2 = true;
+      	sensoresActivados();
         mAlarma2 = false;
         lcd.clear();
       	mConfig = true;
       break;
       case '2':
       	sensorActivado2 = false;
+      	sensoresActivados();
         mAlarma2 = false;
         lcd.clear();
       	mConfig = true;
@@ -519,25 +535,25 @@ void activar2() {
       break;
     }
   }
-  sensoresActivados();
 }
 void activar3() {
   lcd.setCursor(0,0);
   lcd.print("Activar Alarma?");
   lcd.setCursor(0,1);
   lcd.print("1. Si / 2. No");
-   
   char tecla = kp.getKey();
   if (tecla != NO_KEY){
     switch (tecla) {
       case '1':
       	sensorActivado3 = true;
+      	sensoresActivados();
         mAlarma3 = false;
         lcd.clear();
       	mConfig = true;
       break;
       case '2':
       	sensorActivado3 = false;
+      	sensoresActivados();
         mAlarma3 = false;
         lcd.clear();
       	mConfig = true;
@@ -554,7 +570,6 @@ void activar3() {
       break;
     }
   }
-  sensoresActivados();
 }
 void sensoresActivados(){
   if(sensorActivado2){
@@ -562,21 +577,19 @@ void sensoresActivados(){
     duracion2 = pulseIn(pingPin2, HIGH);
     cm2 = duracion2 / 29 / 2;
     Alarma(cm2);
-    //if(cm2 < 50) { analogWrite (led2,255); }
+        
   }
   if(sensorActivado){
     Sensor();
     duracion = pulseIn(pingPin, HIGH);
     cm = duracion / 29 / 2;
     Alarma(cm);
-    //if(cm < 50) { analogWrite (led1,255); }
   }
   if(sensorActivado3){
     Sensor3();
     duracion3 = pulseIn(pingPin, HIGH);
     cm3 = duracion3 / 29 / 2;
     Alarma(cm3);
-    //if(cm3 < 50) { analogWrite (led3,255); }
   }
   if(!sensorActivado && !sensorActivado2 && !sensorActivado3){ noTone(alarma);  }
 }
